@@ -1,6 +1,6 @@
 import { useContext } from 'react';
 import './App.css';
-import AddTransaction from './components/AddTransaction';
+import AddExpense from './components/AddExpense';
 import { TransactionContext } from './context/transactionContext';
 import History from './components/History';
 import Balance from './components/Balance';
@@ -51,11 +51,11 @@ function App() {
       <div className="container">
         <div className="first">
           <Balance />
-          <History handleDeleteTransaction={handleDeleteTransaction} />
+          <AddExpense handleTransaction={handleTransaction} />
         </div>
         <div className="second">
           {' '}
-          <AddTransaction handleTransaction={handleTransaction} />
+          <History handleDeleteTransaction={handleDeleteTransaction} />
         </div>
       </div>
     </div>
