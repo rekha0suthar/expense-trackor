@@ -107,7 +107,7 @@ const AddExpense = () => {
 
   return (
     <div>
-      <div className="add-header">
+      <div className="add-header" style={{ display: !isEditing && 'flex' }}>
         <h2>Add Expense</h2>
         <div className="category">
           {isEditing && (
