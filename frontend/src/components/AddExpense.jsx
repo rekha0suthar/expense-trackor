@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useEffect } from 'react';
 import { TransactionContext } from '../context/transactionContext';
 
 const AddExpense = () => {
@@ -99,11 +99,14 @@ const AddExpense = () => {
     return;
   };
 
-  const fetchCategories = async () => {
-    const response = await fetch('http://localhost:5000/api/category'); // Updated URL to match your aggregation endpoint
-    const data = await response.json();
-    setCategories(data);
-  };
+  useEffect(() => {
+    const fetchCategories = async () => {
+      const response = await fetch('http://localhost:5000/api/category'); // Updated URL to match your aggregation endpoint
+      const data = await response.json();
+      setCategories(data);
+    };
+    fetchCategories();
+  }, [categories, setCategories]);
 
   return (
     <div>
@@ -126,7 +129,6 @@ const AddExpense = () => {
         value={use}
         onChange={(e) => {
           setUse(e.target.value);
-          fetchCategories();
         }}
       >
         <option value="">Select a purpose</option>
