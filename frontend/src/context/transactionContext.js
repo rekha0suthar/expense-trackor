@@ -21,12 +21,18 @@ const TransactionContext = createContext({
   setCategory: () => {},
   categories: [],
   setCategories: () => {},
+  loading: false,
+  setLoading: () => {},
+  selectedCurrency: 'INR',
+  setSelectedCurrency: () => {},
+  exchangeRate: 1,
+  setExchangeRate: () => {},
 });
 
 const TransactionProvider = ({ children }) => {
   const [income, setIncome] = useState(100000);
   const [expense, setExpense] = useState(0);
-  const [balance, setBalance] = useState(0);
+  const [balance, setBalance] = useState(100000);
   const [transaction, setTransaction] = useState([]);
   const [use, setUse] = useState('');
   const [amount, setAmount] = useState(0);
@@ -34,7 +40,9 @@ const TransactionProvider = ({ children }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [category, setCategory] = useState('');
   const [categories, setCategories] = useState([]);
-
+  const [loading, setLoading] = useState(false);
+  const [selectedCurrency, setSelectedCurrency] = useState('INR'); // Default to INR
+  const [exchangeRate, setExchangeRate] = useState(1);
   return (
     <TransactionContext.Provider
       value={{
@@ -58,6 +66,12 @@ const TransactionProvider = ({ children }) => {
         setCategory,
         categories,
         setCategories,
+        loading,
+        setLoading,
+        selectedCurrency,
+        setSelectedCurrency,
+        exchangeRate,
+        setExchangeRate,
       }}
     >
       {children}

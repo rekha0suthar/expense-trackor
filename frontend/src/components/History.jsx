@@ -1,8 +1,16 @@
 import React, { useContext, useEffect } from 'react';
 import { TransactionContext } from '../context/transactionContext';
-
+import { formatCurrency } from '../utils';
+import '../css/history.css';
 const History = ({ handleDeleteTransaction }) => {
-  const { transaction, setTransaction } = useContext(TransactionContext);
+  const {
+    transaction,
+    setTransaction,
+    loading,
+    setLoading,
+    selectedCurrency,
+    exchangeRate,
+  } = useContext(TransactionContext);
   // Array of month names
   const monthNames = [
     'January',
@@ -19,11 +27,18 @@ const History = ({ handleDeleteTransaction }) => {
     'December',
   ];
 
-  // function to get all expenses
+  // Fetch all expenses
   const fetchExpense = async () => {
-    const response = await fetch('http://localhost:5000/api/expenses'); // Updated URL to match your aggregation endpoint
-    const data = await response.json();
-    setTransaction(data);
+    try {
+      setLoading(true);
+      const response = await fetch('http://localhost:5000/api/expenses'); // Update with your deployed URL in production
+      const data = await response.json();
+      setTransaction(data);
+    } catch (error) {
+      console.error('Error fetching expenses:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // function to delete expense
@@ -39,39 +54,53 @@ const History = ({ handleDeleteTransaction }) => {
   };
 
   useEffect(() => {
+    // Fetch all expenses
     const fetchExpense = async () => {
-      const response = await fetch('http://localhost:5000/api/expenses'); // Updated URL to match your aggregation endpoint
-      const data = await response.json();
-      setTransaction(data);
+      try {
+        setLoading(true);
+        const response = await fetch('http://localhost:5000/api/expenses'); // Update with your deployed URL in production
+        const data = await response.json();
+        setTransaction(data);
+      } catch (error) {
+        console.error('Error fetching expenses:', error);
+      } finally {
+        setLoading(false);
+      }
     };
     fetchExpense();
-  }, [setTransaction]);
+  }, [setTransaction, setLoading]);
 
   return (
     <div>
-      <h2>History</h2>
-      {transaction.length > 0 ? (
+      <h2>Monthly Expenses</h2>
+      {transaction.length > 0 && !loading ? (
         transaction?.map((item, index) => (
           <div key={index}>
             <div className="month-header">
               <h3>
                 {monthNames[item.month - 1]}, {item.year}
               </h3>
-              <strong>{`Total:  ₹${item.total}`}</strong>{' '}
+              <strong>{`Total:  ${formatCurrency(
+                selectedCurrency,
+                exchangeRate,
+                item.total
+              )}`}</strong>{' '}
             </div>
             <ul>
-              {item.expenses?.map((exp) => (
-                <li key={exp.id}>
+              {item.expenses?.map((exp, index) => (
+                <li key={index}>
                   <span>
                     <p>
                       <strong>Purpose:</strong> {exp.purpose}
                     </p>
                     <p>
                       <strong>Amount:</strong>{' '}
-                      <strong>
-                        ₹{Math.abs(exp.amount)}{' '}
-                        {/* Display absolute value for expenses */}
-                      </strong>
+                      {formatCurrency(
+                        selectedCurrency,
+                        exchangeRate,
+                        exp.amount
+                      )}{' '}
+                      {/* Display absolute value for expenses */}
                     </p>
                   </span>
                   <button
@@ -87,7 +116,7 @@ const History = ({ handleDeleteTransaction }) => {
           </div>
         ))
       ) : (
-        <p className="dummy">No Transaction added</p>
+        <p className="dummy">No Expenses added</p>
       )}
     </div>
   );

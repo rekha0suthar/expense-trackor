@@ -1,0 +1,46 @@
+.add-header {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+.add-header button {
+  margin: 10px;
+  padding: 10px;
+}
+
+.category {
+  display: flex;
+  justify-content: end;
+  flex: 2;
+}
+
+.add-btn {
+  width: 100%;
+  background-color: blue;
+  color: white;
+  margin-left: 0px;
+}
+
+label {
+  text-align: left !important;
+  font-weight: bold;
+  font-size: 18px;
+}
+
+.add-expense-form input,
+.category-selector {
+  padding: 15px;
+  margin: 10px 0px;
+  width: 100%;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  outline: none;
+  font-size: 16px;
+  box-sizing: border-box;
+  color: #000;
+}
+
+.category input {
+  max-width: 300px;
+}

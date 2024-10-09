@@ -4,6 +4,7 @@ import AddExpense from './components/AddExpense';
 import { TransactionContext } from './context/transactionContext';
 import History from './components/History';
 import Balance from './components/Balance';
+import Spinner from './assets/loading.gif';
 
 function App() {
   const {
@@ -16,6 +17,7 @@ function App() {
     setUse,
     transaction,
     setTransaction,
+    loading,
   } = useContext(TransactionContext);
 
   const handleTransaction = () => {
@@ -48,16 +50,23 @@ function App() {
   return (
     <div className="App">
       <h1>Expense Tracker</h1>
-      <div className="container">
-        <div className="first">
-          <Balance />
-          <AddExpense handleTransaction={handleTransaction} />
-        </div>
-        <div className="second">
+      {loading ? (
+        <div className="spinner">
           {' '}
-          <History handleDeleteTransaction={handleDeleteTransaction} />
+          <img src={Spinner} alt="loading" />
         </div>
-      </div>
+      ) : (
+        <div className="container">
+          <div className="first">
+            <Balance />
+            <AddExpense handleTransaction={handleTransaction} />
+          </div>
+          <div className="second">
+            {' '}
+            <History handleDeleteTransaction={handleDeleteTransaction} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

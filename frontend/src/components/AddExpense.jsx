@@ -1,6 +1,6 @@
 import React, { useContext, useEffect } from 'react';
 import { TransactionContext } from '../context/transactionContext';
-
+import '../css/add-expense.css';
 const AddExpense = () => {
   const {
     setTransaction,
@@ -106,10 +106,10 @@ const AddExpense = () => {
       setCategories(data);
     };
     fetchCategories();
-  }, [categories, setCategories]);
+  }, [setCategories]);
 
   return (
-    <div>
+    <div className="add-expense-form">
       <div className="add-header" style={{ display: !isEditing && 'flex' }}>
         <h2>Add Expense</h2>
         <div className="category">
@@ -118,6 +118,7 @@ const AddExpense = () => {
               type="text"
               value={category}
               onChange={(e) => setCategory(e.target.value)}
+              placeholder="Add new category"
             />
           )}
           <button onClick={handleAddCategory}>Add Category</button>
@@ -130,6 +131,7 @@ const AddExpense = () => {
         onChange={(e) => {
           setUse(e.target.value);
         }}
+        className="category-selector"
       >
         <option value="">Select a purpose</option>
         {categories.map(({ id, title }) => (
@@ -148,6 +150,7 @@ const AddExpense = () => {
       />
       <br />
       <label>Expense Date</label>
+      <br />
       <input type="date" onChange={(e) => setExpenseDate(e.target.value)} />
       <button className="add-btn" onClick={handleTransaction}>
         Add Transaction
