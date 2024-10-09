@@ -1,6 +1,8 @@
 import React, { useContext, useEffect } from 'react';
 import { TransactionContext } from '../context/transactionContext';
+import { addExpense, fetchBalance, fetchExpense } from '../utils';
 import '../css/add-expense.css';
+
 const AddExpense = () => {
   const {
     setTransaction,
@@ -16,6 +18,10 @@ const AddExpense = () => {
     setCategory,
     categories,
     setCategories,
+    setLoading,
+    setExpense,
+    setSelectedCurrency,
+    setIncome,
   } = useContext(TransactionContext);
 
   const handleTransaction = async () => {
@@ -26,13 +32,9 @@ const AddExpense = () => {
     };
 
     // Post the new expense to the server
-    const response = await fetch('http://localhost:5000/api/expenses', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(newExpense),
-    });
+    const response = addExpense(newExpense);
+    fetchExpense(setLoading, setExpense);
+    fetchBalance(setSelectedCurrency, setIncome);
 
     if (response.ok) {
       const addedExpense = await response.json();
@@ -84,14 +86,22 @@ const AddExpense = () => {
     setIsEditing(!isEditing);
     if (isEditing && category) {
       try {
-        await fetch('http://localhost:5000/api/category', {
+        const response = await fetch('http://localhost:5000/api/category', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({ title: category }),
         });
-        setCategory('');
+
+        if (!response.ok) {
+          const data = await response.json();
+          alert(data.message); // Set error message from server
+          setCategory('');
+        } else {
+          setCategories((prev) => [...prev, { title: category }]); // Add new category to state
+          setCategory('');
+        }
       } catch (error) {
         console.error(error);
       }
