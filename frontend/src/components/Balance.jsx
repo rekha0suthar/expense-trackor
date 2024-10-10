@@ -82,7 +82,9 @@ const Balance = () => {
     const fetchExpense = async () => {
       try {
         setLoading(true);
-        const response = await fetch('http://localhost:5000/api/expenses');
+        const response = await fetch(
+          `${process.env.REACT_APP_API_URL}/expenses`
+        );
         const data = await response.json();
         const totalExpenses = data.reduce((acc, curr) => acc + curr.total, 0);
 
@@ -96,7 +98,9 @@ const Balance = () => {
 
     const fetchBalance = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/balance');
+        const response = await fetch(
+          `${process.env.REACT_APP_API_URL}/balance`
+        );
         const data = await response.json();
         data.forEach((item) => {
           setSelectedCurrency(item.currency);

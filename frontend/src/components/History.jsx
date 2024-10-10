@@ -31,7 +31,7 @@ const History = ({ handleDeleteTransaction }) => {
   const fetchExpense = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:5000/api/expenses'); // Update with your deployed URL in production
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/expenses`); // Update with your deployed URL in production
       const data = await response.json();
       setTransaction(data);
     } catch (error) {
@@ -44,7 +44,7 @@ const History = ({ handleDeleteTransaction }) => {
   // function to delete expense
   const deleteExpense = async (expenseDate) => {
     try {
-      await fetch(`http://localhost:5000/api/expenses/${expenseDate}`, {
+      await fetch(`${process.env.REACT_APP_API_URL}/expenses/${expenseDate}`, {
         method: 'DELETE',
       });
       fetchExpense();
@@ -58,7 +58,9 @@ const History = ({ handleDeleteTransaction }) => {
     const fetchExpense = async () => {
       try {
         setLoading(true);
-        const response = await fetch('http://localhost:5000/api/expenses'); // Update with your deployed URL in production
+        const response = await fetch(
+          `${process.env.REACT_APP_API_URL}/expenses`
+        ); // Update with your deployed URL in production
         const data = await response.json();
         setTransaction(data);
       } catch (error) {

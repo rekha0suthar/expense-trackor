@@ -86,13 +86,16 @@ const AddExpense = () => {
     setIsEditing(!isEditing);
     if (isEditing && category) {
       try {
-        const response = await fetch('http://localhost:5000/api/category', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ title: category }),
-        });
+        const response = await fetch(
+          `${process.env.REACT_APP_API_URL}/category`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ title: category }),
+          }
+        );
 
         if (!response.ok) {
           const data = await response.json();
@@ -111,7 +114,7 @@ const AddExpense = () => {
 
   useEffect(() => {
     const fetchCategories = async () => {
-      const response = await fetch('http://localhost:5000/api/category'); // Updated URL to match your aggregation endpoint
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/category`); // Updated URL to match your aggregation endpoint
       const data = await response.json();
       setCategories(data);
     };
