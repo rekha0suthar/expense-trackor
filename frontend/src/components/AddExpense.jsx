@@ -32,7 +32,9 @@ const AddExpense = () => {
     const fetchCategories = async () => {
       try {
         setLoading(true);
-        const response = await fetch('http://localhost:5001/api/category');
+        const response = await fetch(
+          'https://expense-trackor-backend.vercel.app/api/category'
+        );
         if (!response.ok) throw new Error('Failed to fetch categories');
         const data = await response.json();
         setCategories(data);
@@ -64,13 +66,16 @@ const AddExpense = () => {
     };
 
     try {
-      const response = await fetch('http://localhost:5001/api/expenses', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newExpense),
-      });
+      const response = await fetch(
+        'https://expense-trackor-backend.vercel.app/api/expenses',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(newExpense),
+        }
+      );
 
       if (response.ok) {
         const addedExpense = await response.json();
@@ -100,13 +105,16 @@ const AddExpense = () => {
       setIsEditing(!isEditing);
       if (isEditing && category) {
         try {
-          const response = await fetch('http://localhost:5001/api/category', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ title: category }),
-          });
+          const response = await fetch(
+            'https://expense-trackor-backend.vercel.app/api/category',
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ title: category }),
+            }
+          );
 
           if (!response.ok) {
             const data = await response.json();

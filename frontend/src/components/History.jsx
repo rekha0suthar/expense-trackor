@@ -31,7 +31,9 @@ const History = ({ handleDeleteTransaction }) => {
   const fetchExpense = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:5001/api/expenses'); // Update with your deployed URL in production
+      const response = await fetch(
+        'https://expense-trackor-backend.vercel.app/api/expenses'
+      ); // Update with your deployed URL in production
       const data = await response.json();
       setTransaction(data);
     } catch (error) {
@@ -44,9 +46,12 @@ const History = ({ handleDeleteTransaction }) => {
   // function to delete expense
   const deleteExpense = async (expenseDate) => {
     try {
-      await fetch(`http://localhost:5001/api/expenses/${expenseDate}`, {
-        method: 'DELETE',
-      });
+      await fetch(
+        `https://expense-trackor-backend.vercel.app/api/expenses/${expenseDate}`,
+        {
+          method: 'DELETE',
+        }
+      );
       fetchExpense();
     } catch (error) {
       console.error(error);
@@ -58,7 +63,9 @@ const History = ({ handleDeleteTransaction }) => {
     const fetchExpense = async () => {
       try {
         setLoading(true);
-        const response = await fetch('http://localhost:5001/api/expenses'); // Update with your deployed URL in production
+        const response = await fetch(
+          'https://expense-trackor-backend.vercel.app/api/expenses'
+        ); // Update with your deployed URL in production
         const data = await response.json();
         setTransaction(data);
       } catch (error) {
