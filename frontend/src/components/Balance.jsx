@@ -58,7 +58,7 @@ const Balance = () => {
   const addBalance = async (e) => {
     e.preventDefault();
     try {
-      await fetch('http://localhost:5000/api/balance', {
+      await fetch('http://localhost:5001/api/balance', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -82,9 +82,7 @@ const Balance = () => {
     const fetchExpense = async () => {
       try {
         setLoading(true);
-        const response = await fetch(
-          `${process.env.REACT_APP_API_URL}/expenses`
-        );
+        const response = await fetch('http://localhost:5001/api/expenses');
         const data = await response.json();
         const totalExpenses = data.reduce((acc, curr) => acc + curr.total, 0);
 
@@ -98,9 +96,7 @@ const Balance = () => {
 
     const fetchBalance = async () => {
       try {
-        const response = await fetch(
-          `${process.env.REACT_APP_API_URL}/balance`
-        );
+        const response = await fetch('http://localhost:5001/api/balance');
         const data = await response.json();
         data.forEach((item) => {
           setSelectedCurrency(item.currency);

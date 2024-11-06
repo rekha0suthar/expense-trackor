@@ -8,7 +8,7 @@ export const formatCurrency = (currency, exchangeRate, amount, show = true) => {
 
 export const fetchBalance = async (setSelectedCurrency, setIncome) => {
   try {
-    const response = await fetch('http://localhost:5000/api/balance');
+    const response = await fetch('http://localhost:5001/api/balance');
     const data = await response.json();
     data.forEach((item) => {
       setSelectedCurrency(item.currency);
@@ -22,7 +22,7 @@ export const fetchBalance = async (setSelectedCurrency, setIncome) => {
 export const fetchExpense = async (setLoading, setExpense) => {
   try {
     setLoading(true);
-    const response = await fetch('http://localhost:5000/api/expenses');
+    const response = await fetch('http://localhost:5001/api/expenses');
     const data = await response.json();
     const totalExpenses = data.reduce((acc, curr) => acc + curr.total, 0);
 
@@ -36,7 +36,7 @@ export const fetchExpense = async (setLoading, setExpense) => {
 
 export const addExpense = async (newExpense) => {
   // Post the new expense to the server
-  await fetch('http://localhost:5000/api/expenses', {
+  await fetch('http://localhost:5001/api/expenses', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

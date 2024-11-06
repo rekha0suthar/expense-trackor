@@ -1,7 +1,8 @@
-import React, { useContext, useEffect } from 'react';
+import React, { useContext, useEffect, useState, useCallback } from 'react';
 import { TransactionContext } from '../context/transactionContext';
-import { addExpense, fetchBalance, fetchExpense } from '../utils';
+import { fetchBalance, fetchExpense } from '../utils';
 import '../css/add-expense.css';
+import debounce from 'lodash.debounce'; // Use lodash debounce for better control
 
 const AddExpense = () => {
   const {
@@ -24,102 +25,104 @@ const AddExpense = () => {
     setIncome,
   } = useContext(TransactionContext);
 
-  const handleTransaction = async () => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Fetch categories only once when the component mounts
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('http://localhost:5001/api/category');
+        if (!response.ok) throw new Error('Failed to fetch categories');
+        const data = await response.json();
+        setCategories(data);
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCategories();
+  }, [setCategories, setLoading]);
+
+  // Using useCallback to memoize the function
+  const handleTransaction = debounce(async () => {
+    if (!amount || !use || !expenseDate || isSubmitting) {
+      alert(
+        'Please fill all fields and wait for the current request to finish!'
+      );
+      return;
+    }
+
+    setIsSubmitting(true);
+
     const newExpense = {
       purpose: use,
       amount,
-      expenseDate: new Date(expenseDate), // Convert to proper Date object
+      expenseDate: new Date(expenseDate),
     };
 
-    // Post the new expense to the server
-    const response = addExpense(newExpense);
-    fetchExpense(setLoading, setExpense);
-    fetchBalance(setSelectedCurrency, setIncome);
-
-    if (response.ok) {
-      const addedExpense = await response.json();
-
-      // Immediately add it to the state
-      setTransaction((prevTransactions) => {
-        // Extract month and year from the added expense date
-        const expenseMonth = new Date(addedExpense.expenseDate).getMonth() + 1; // Months are zero-indexed
-        const expenseYear = new Date(addedExpense.expenseDate).getFullYear();
-
-        // Check if the transaction for the same month and year exists
-        const monthGroup = prevTransactions.find(
-          (t) => t.month === expenseMonth && t.year === expenseYear
-        );
-
-        if (monthGroup) {
-          // If the month exists, add the new expense to it
-          return prevTransactions.map((t) =>
-            t.month === expenseMonth && t.year === expenseYear
-              ? {
-                  ...t,
-                  expenses: [...t.expenses, addedExpense],
-                  total: t.total + addedExpense.amount,
-                }
-              : t
-          );
-        } else {
-          // If it's a new month, add a new group for the month
-          return [
-            ...prevTransactions,
-            {
-              month: expenseMonth,
-              year: expenseYear,
-              expenses: [addedExpense],
-              total: addedExpense.amount,
-            },
-          ];
-        }
+    try {
+      const response = await fetch('http://localhost:5001/api/expenses', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newExpense),
       });
-    } else {
-      console.error('Failed to add new expense');
-    }
-    setAmount(0);
-    setUse('');
-    setExpenseDate(null);
-  };
 
-  const handleAddCategory = async () => {
-    setIsEditing(!isEditing);
-    if (isEditing && category) {
-      try {
-        const response = await fetch(
-          `${process.env.REACT_APP_API_URL}/category`,
-          {
+      if (response.ok) {
+        const addedExpense = await response.json();
+        setTransaction((prev) => [...prev, addedExpense]);
+
+        // Reset fields
+        setAmount(0);
+        setUse('');
+        setExpenseDate(null);
+
+        // Update expenses and balance
+        fetchExpense(setLoading, setExpense);
+        fetchBalance(setSelectedCurrency, setIncome);
+      } else {
+        console.error('Failed to add expense');
+      }
+    } catch (error) {
+      console.error('Error adding expense:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, 500); // Debounce for 500ms
+
+  const handleAddCategory = useCallback(
+    async (e) => {
+      e.preventDefault();
+      setIsEditing(!isEditing);
+      if (isEditing && category) {
+        try {
+          const response = await fetch('http://localhost:5001/api/category', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({ title: category }),
+          });
+
+          if (!response.ok) {
+            const data = await response.json();
+            alert(data.message);
+            setCategory('');
+          } else {
+            setCategories((prev) => [...prev, { title: category }]);
+            setCategory('');
           }
-        );
-
-        if (!response.ok) {
-          const data = await response.json();
-          alert(data.message); // Set error message from server
-          setCategory('');
-        } else {
-          setCategories((prev) => [...prev, { title: category }]); // Add new category to state
-          setCategory('');
+        } catch (error) {
+          console.error('Error adding category:', error);
         }
-      } catch (error) {
-        console.error(error);
       }
-    }
-    return;
-  };
-
-  useEffect(() => {
-    const fetchCategories = async () => {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/category`); // Updated URL to match your aggregation endpoint
-      const data = await response.json();
-      setCategories(data);
-    };
-    fetchCategories();
-  }, [setCategories]);
+    },
+    [isEditing, category, setCategories, setCategory, setIsEditing]
+  );
 
   return (
     <div className="add-expense-form">
@@ -141,9 +144,7 @@ const AddExpense = () => {
       <br />
       <select
         value={use}
-        onChange={(e) => {
-          setUse(e.target.value);
-        }}
+        onChange={(e) => setUse(e.target.value)}
         className="category-selector"
       >
         <option value="">Select a purpose</option>
@@ -165,8 +166,12 @@ const AddExpense = () => {
       <label>Expense Date</label>
       <br />
       <input type="date" onChange={(e) => setExpenseDate(e.target.value)} />
-      <button className="add-btn" onClick={handleTransaction}>
-        Add Transaction
+      <button
+        className="add-btn"
+        onClick={handleTransaction}
+        disabled={isSubmitting}
+      >
+        {isSubmitting ? 'Adding...' : 'Add Transaction'}
       </button>
     </div>
   );
