@@ -1,34 +1,208 @@
+.history-card {
+  background: white;
+}
+
+.history-title {
+  color: var(--primary-color);
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+  font-weight: 600;
+}
+
+.month-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.month-section {
+  background: var(--light-bg);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.month-section.expanded {
+  box-shadow: var(--card-shadow);
+}
+
 .month-header {
+  width: 100%;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: -15px;
+  padding: 1rem 1.5rem;
+  background: white;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
-.del-btn {
-  color: gray;
-  background: transparent;
+.month-header:hover {
+  background: var(--light-bg);
 }
 
-ul {
+.month-header-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.month-icon {
+  color: var(--text-light);
+  display: flex;
+  align-items: center;
+  transition: transform 0.3s ease;
+}
+
+.expanded .month-icon {
+  color: var(--secondary-color);
+}
+
+.month-title {
+  margin: 0;
+  color: var(--text-color);
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.month-total {
+  font-weight: 600;
+  color: var(--secondary-color);
+  background: rgba(48, 79, 254, 0.1);
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+}
+
+.expense-list {
   list-style: none;
-  padding: 10px;
-  background-color: #eee;
+  padding: 0;
+  margin: 0;
+  background: white;
 }
 
-li {
+.expense-item {
   display: flex;
   justify-content: space-between;
-  background-color: white;
-  box-shadow: 0px 0px 6px #eee;
-  padding: 0px 10px;
-  margin-bottom: 10px;
-  font-size: 14px;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--border-color);
+  transition: all 0.3s ease;
+  position: relative;
 }
 
-.dummy {
+.expense-item:hover {
+  background: var(--light-bg);
+}
+
+.expense-details {
+  flex-grow: 1;
+  margin-right: 1rem;
+}
+
+.expense-purpose {
+  margin: 0;
+  color: var(--text-color);
+  font-weight: 500;
+  font-size: 1rem;
+}
+
+.expense-amount {
+  margin: 0.25rem 0 0;
+  color: var(--danger-color);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.expense-date {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-light);
+  margin-top: 0.25rem;
+}
+
+.delete-btn {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(213, 0, 0, 0.1);
+  color: var(--danger-color);
+  transition: all 0.3s ease;
+  opacity: 1;
+}
+
+.delete-btn:hover {
+  background: var(--danger-color);
+  color: white;
+  transform: scale(1.1);
+}
+
+/* Animation for collapsible sections */
+.expense-list {
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .delete-btn {
+    opacity: 1;
+  }
+
+  .month-header {
+    padding: 0.75rem 1rem;
+  }
+
+  .expense-item {
+    padding: 0.75rem 1rem;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .month-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .expense-item {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .delete-btn {
+    align-self: flex-end;
+  }
+}
+
+.expense-loading {
   text-align: center;
-  font-size: 20px;
-  background-color: #eee;
-  padding: 10px;
+  color: var(--text-light);
+  padding: 2rem;
+  font-size: 1rem;
+  background: var(--light-bg);
+  border-radius: 12px;
+}
+
+.empty-state {
+  text-align: center;
+  color: var(--text-light);
+  padding: 3rem 1.5rem;
+  font-size: 1.1rem;
+  background: var(--light-bg);
+  border-radius: 12px;
 }

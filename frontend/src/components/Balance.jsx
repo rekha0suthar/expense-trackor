@@ -1,7 +1,14 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState, useCallback } from 'react';
 import { TransactionContext } from '../context/transactionContext';
 import { formatCurrency } from '../utils';
+import { useApiCache } from '../hooks/useApiCache';
 import '../css/balance.css';
+import '../css/common.css';
+import { debounce } from 'lodash';
+import { FaPlus } from 'react-icons/fa';
+import axios from 'axios';
+
+const API_URL = 'https://expense-trackor-backend.vercel.app/api';
 
 const Balance = () => {
   const {
@@ -10,67 +17,112 @@ const Balance = () => {
     setIncome,
     expense,
     setExpense,
-    setLoading,
     selectedCurrency,
     setSelectedCurrency,
     exchangeRate,
     setExchangeRate,
   } = useContext(TransactionContext);
 
+  const { fetchData, invalidateCache } = useApiCache();
   const [newBalance, setNewBalance] = useState(10); // Local state for new balance
 
   // Currency options
   const currencies = ['INR', 'USD', 'EUR', 'GBP'];
 
-  // Fetch exchange rate
-  const fetchExchangeRate = async (currency) => {
-    if (currency === 'INR') {
-      setExchangeRate(1); // No conversion for INR
-      return;
-    }
+  // Memoized fetch functions
+  const fetchInitialData = useCallback(async () => {
     try {
-      const response = await fetch(
-        `https://api.exchangerate-api.com/v4/latest/INR`
+      const [balanceData, expenseData] = await Promise.all([
+        fetchData(`${API_URL}/balance`),
+        fetchData(`${API_URL}/expenses`),
+      ]);
+
+      if (balanceData.length > 0) {
+        const latestBalance = balanceData[balanceData.length - 1];
+        setSelectedCurrency(latestBalance.currency);
+        setNewBalance(latestBalance.balanceAmount);
+        setIncome(latestBalance.balanceAmount);
+        await fetchExchangeRate(latestBalance.currency);
+      }
+
+      const totalExpenses = expenseData.reduce(
+        (acc, curr) => acc + curr.total,
+        0
       );
-      const data = await response.json();
-      setExchangeRate(data.rates[currency]);
+      setExpense(totalExpenses);
     } catch (error) {
-      console.error('Error fetching exchange rate:', error);
+      console.error('Error fetching initial data:', error);
     }
+  }, [fetchData, setSelectedCurrency, setIncome, setExpense]);
+
+  // Debounced balance update
+  const debouncedUpdateBalance = useCallback(
+    debounce(async (balanceData) => {
+      try {
+        await fetchData(`${API_URL}/balance`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(balanceData),
+        });
+        // Invalidate balance cache after update
+        invalidateCache(`${API_URL}/balance`);
+      } catch (error) {
+        console.error('Error updating balance:', error);
+      }
+    }, 1000),
+    [fetchData, invalidateCache]
+  );
+
+  // Memoized exchange rate fetch
+  const fetchExchangeRate = useCallback(
+    async (currency) => {
+      if (currency === 'INR') {
+        setExchangeRate(1);
+        return;
+      }
+      try {
+        const data = await axios(
+          `https://api.exchangerate-api.com/v4/latest/INR`
+        );
+        setExchangeRate(data.rates[currency]);
+      } catch (error) {
+        console.error('Error fetching exchange rate:', error);
+      }
+    },
+    [setExchangeRate]
+  );
+
+  useEffect(() => {
+    fetchInitialData();
+  }, [fetchInitialData]);
+
+  // Update addBalance to use debounced version
+  const addBalance = async (e) => {
+    e.preventDefault();
+    debouncedUpdateBalance({
+      currency: selectedCurrency,
+      balanceAmount: newBalance,
+    });
   };
 
   // Handle currency change and update balance based on the new exchange rate
   const handleCurrencyChange = async (e) => {
     const newCurrency = e.target.value;
-    const currentBalanceInINR = newBalance / exchangeRate; // Convert balance back to INR
+    const currentBalanceInINR = balance / exchangeRate; // Use balance instead of newBalance
 
-    await fetchExchangeRate(newCurrency); // Fetch new exchange rate for the selected currency
-
+    await fetchExchangeRate(newCurrency);
     setSelectedCurrency(newCurrency);
 
-    // After fetching the exchange rate, convert INR balance to new currency
+    // Convert INR balance to new currency
     const convertedBalance = currentBalanceInINR * exchangeRate;
-    setNewBalance(convertedBalance); // Update the displayed balance in new currency
+    setNewBalance(convertedBalance);
     setIncome(convertedBalance);
   };
 
-  // Add new balance to the backend
-  const addBalance = async (e) => {
-    e.preventDefault();
-    try {
-      await fetch('https://expense-trackor-backend.vercel.app/api/balance', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          currency: selectedCurrency,
-          balanceAmount: newBalance,
-        }),
-      });
-    } catch (error) {
-      console.error(error);
-    }
+  // Update input handling to properly handle currency conversion
+  const handleBalanceInput = (e) => {
+    const inputValue = parseFloat(e.target.value);
+    setNewBalance(inputValue / exchangeRate); // Store base value
   };
 
   // Update balance whenever newBalance or expense changes
@@ -78,82 +130,53 @@ const Balance = () => {
     setBalance(newBalance - expense); // Calculate balance as income - expense
   }, [newBalance, expense, setBalance]);
 
-  useEffect(() => {
-    const fetchExpense = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch(
-          'https://expense-trackor-backend.vercel.app/api/expenses'
-        );
-        const data = await response.json();
-        const totalExpenses = data.reduce((acc, curr) => acc + curr.total, 0);
-
-        setExpense(totalExpenses);
-      } catch (err) {
-        console.error('Error fetching expenses:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    const fetchBalance = async () => {
-      try {
-        const response = await fetch(
-          'https://expense-trackor-backend.vercel.app/api/balance'
-        );
-        const data = await response.json();
-        data.forEach((item) => {
-          setSelectedCurrency(item.currency);
-          setNewBalance(item.balanceAmount);
-          setIncome(item.balanceAmount);
-        });
-      } catch (err) {
-        console.error('Error fetching balance:', err);
-      }
-    };
-
-    fetchBalance();
-    fetchExpense();
-  }, [setExpense, setLoading, setSelectedCurrency, setIncome]);
-
   return (
-    <>
+    <div className="card balance-card">
       <div className="balance-header">
-        <h2>Total Balance:</h2>
-        {/* Currency Selector */}
-        <div className="currency-selector">
-          <select value={selectedCurrency} onChange={handleCurrencyChange}>
+        <h2>Total Balance</h2>
+        <div className="currency-controls">
+          <select
+            className="currency-selector"
+            value={selectedCurrency}
+            onChange={handleCurrencyChange}
+          >
             {currencies.map((currency) => (
               <option key={currency} value={currency}>
                 {currency}
               </option>
             ))}
           </select>
-          <h2>
+          <div className="balance-input-group">
             <input
               type="number"
-              value={(newBalance * exchangeRate).toFixed(2)} // Format to 2 decimal places
-              onChange={(e) => setNewBalance(parseFloat(e.target.value))} // Parse input to float
+              value={(newBalance * exchangeRate).toFixed(2)}
+              onChange={handleBalanceInput}
+              min="0"
+              step="0.01"
+              className="balance-input"
             />
-          </h2>
-          <button onClick={addBalance}>+</button>
+            <button className="btn btn-primary" onClick={addBalance}>
+              <FaPlus />
+            </button>
+          </div>
         </div>
       </div>
-      <div className="wrapper">
-        <div>
-          Left Balance{' '}
-          <strong>
+
+      <div className="balance-stats">
+        <div className="stat-card">
+          <span className="stat-label">Available Balance</span>
+          <span className="stat-value positive">
             {formatCurrency(selectedCurrency, exchangeRate, balance)}
-          </strong>
+          </span>
         </div>
-        <div>
-          Total Expenses{' '}
-          <strong>
+        <div className="stat-card">
+          <span className="stat-label">Total Expenses</span>
+          <span className="stat-value negative">
             {formatCurrency(selectedCurrency, exchangeRate, expense)}
-          </strong>
+          </span>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

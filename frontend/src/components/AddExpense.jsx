@@ -2,7 +2,13 @@ import React, { useContext, useEffect, useState, useCallback } from 'react';
 import { TransactionContext } from '../context/transactionContext';
 import { fetchBalance, fetchExpense } from '../utils';
 import '../css/add-expense.css';
-import debounce from 'lodash.debounce'; // Use lodash debounce for better control
+import '../css/common.css';
+import { debounce } from 'lodash';
+import { FaPlus, FaTimes } from 'react-icons/fa';
+import { useApi } from '../hooks/useApi';
+import { addCategory, addExpense, getCategories } from '../apis';
+
+const API_URL = process.env.REACT_APP_API_URL;
 
 const AddExpense = () => {
   const {
@@ -26,78 +32,62 @@ const AddExpense = () => {
   } = useContext(TransactionContext);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { fetchData } = useApi();
 
-  // Fetch categories only once when the component mounts
+  // Fetch categories only once
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        setLoading(true);
-        const response = await fetch(
-          'https://expense-trackor-backend.vercel.app/api/category'
-        );
-        if (!response.ok) throw new Error('Failed to fetch categories');
-        const data = await response.json();
+        const data = await getCategories();
         setCategories(data);
       } catch (error) {
         console.error('Error fetching categories:', error);
-      } finally {
-        setLoading(false);
       }
     };
 
     fetchCategories();
-  }, [setCategories, setLoading]);
+  }, [setCategories]);
 
-  // Using useCallback to memoize the function
-  const handleTransaction = debounce(async () => {
-    if (!amount || !use || !expenseDate || isSubmitting) {
-      alert(
-        'Please fill all fields and wait for the current request to finish!'
-      );
-      return;
-    }
+  // Debounced transaction handler
+  const debouncedHandleTransaction = useCallback(
+    debounce(async (e) => {
+      e.preventDefault();
+      if (!amount || !use || !expenseDate || isSubmitting) {
+        alert('Please fill all fields');
+        return;
+      }
 
-    setIsSubmitting(true);
+      setIsSubmitting(true);
+      try {
+        const newExpense = {
+          purpose: use,
+          amount: parseFloat(amount),
+          expenseDate: new Date(expenseDate).toISOString(),
+        };
 
-    const newExpense = {
-      purpose: use,
-      amount,
-      expenseDate: new Date(expenseDate),
-    };
+        const addedExpense = await addExpense(newExpense);
 
-    try {
-      const response = await fetch(
-        'https://expense-trackor-backend.vercel.app/api/expenses',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(newExpense),
-        }
-      );
-
-      if (response.ok) {
-        const addedExpense = await response.json();
         setTransaction((prev) => [...prev, addedExpense]);
 
-        // Reset fields
+        // Reset form
         setAmount(0);
         setUse('');
-        setExpenseDate(null);
+        setExpenseDate('');
 
-        // Update expenses and balance
-        fetchExpense(setLoading, setExpense);
-        fetchBalance(setSelectedCurrency, setIncome);
-      } else {
-        console.error('Failed to add expense');
+        // Update data
+        await Promise.all([
+          fetchExpense(setLoading, setExpense),
+          fetchBalance(setSelectedCurrency, setIncome),
+        ]);
+      } catch (error) {
+        console.error('Error adding expense:', error);
+        alert('Failed to add expense. Please try again.');
+      } finally {
+        setIsSubmitting(false);
       }
-    } catch (error) {
-      console.error('Error adding expense:', error);
-    } finally {
-      setIsSubmitting(false);
-    }
-  }, 500); // Debounce for 500ms
+    }, 1000),
+    [amount, use, expenseDate, isSubmitting, fetchData]
+  );
 
   const handleAddCategory = useCallback(
     async (e) => {
@@ -105,25 +95,10 @@ const AddExpense = () => {
       setIsEditing(!isEditing);
       if (isEditing && category) {
         try {
-          const response = await fetch(
-            'https://expense-trackor-backend.vercel.app/api/category',
-            {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({ title: category }),
-            }
-          );
+          await addCategory({ title: category });
+          setCategory('');
 
-          if (!response.ok) {
-            const data = await response.json();
-            alert(data.message);
-            setCategory('');
-          } else {
-            setCategories((prev) => [...prev, { title: category }]);
-            setCategory('');
-          }
+          setCategories((prev) => [...prev, { title: category }]);
         } catch (error) {
           console.error('Error adding category:', error);
         }
@@ -133,54 +108,84 @@ const AddExpense = () => {
   );
 
   return (
-    <div className="add-expense-form">
-      <div className="add-header" style={{ display: !isEditing && 'flex' }}>
+    <div className="card expense-card">
+      <div className="expense-header">
         <h2>Add Expense</h2>
-        <div className="category">
-          {isEditing && (
+        <button
+          className={`btn ${isEditing ? 'btn-danger' : 'btn-primary'}`}
+          onClick={handleAddCategory}
+        >
+          {isEditing ? <FaTimes /> : <FaPlus />}
+          {isEditing ? 'Cancel' : 'Add Category'}
+        </button>
+      </div>
+
+      {isEditing && (
+        <div className="category-form">
+          <div className="input-group">
             <input
               type="text"
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              placeholder="Add new category"
+              placeholder="Enter category name"
+              className="category-input"
             />
-          )}
-          <button onClick={handleAddCategory}>Add Category</button>
+          </div>
+          <button
+            className="btn btn-success"
+            onClick={handleAddCategory}
+            disabled={!category}
+          >
+            <FaPlus /> Save Category
+          </button>
         </div>
-      </div>
-      <label>Purpose</label>
-      <br />
-      <select
-        value={use}
-        onChange={(e) => setUse(e.target.value)}
-        className="category-selector"
-      >
-        <option value="">Select a purpose</option>
-        {categories.map(({ id, title }) => (
-          <option key={id} value={title}>
-            {title}
-          </option>
-        ))}
-      </select>
-      <br />
-      <label>Amount</label>
-      <br />
-      <input
-        type="number"
-        value={amount}
-        onChange={(e) => setAmount(parseFloat(e.target.value))}
-      />
-      <br />
-      <label>Expense Date</label>
-      <br />
-      <input type="date" onChange={(e) => setExpenseDate(e.target.value)} />
-      <button
-        className="add-btn"
-        onClick={handleTransaction}
-        disabled={isSubmitting}
-      >
-        {isSubmitting ? 'Adding...' : 'Add Transaction'}
-      </button>
+      )}
+
+      <form className="expense-form" onSubmit={(e) => e.preventDefault()}>
+        <div className="input-group">
+          <label>Purpose</label>
+          <select
+            value={use}
+            onChange={(e) => setUse(e.target.value)}
+            className="category-selector"
+          >
+            <option value="">Select a purpose</option>
+            {categories.map(({ id, title }) => (
+              <option key={id} value={title}>
+                {title}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="input-group">
+          <label>Amount</label>
+          <input
+            type="number"
+            value={amount}
+            onChange={(e) => setAmount(parseFloat(e.target.value))}
+            min="0"
+            step="0.01"
+          />
+        </div>
+
+        <div className="input-group">
+          <label>Expense Date</label>
+          <input
+            type="date"
+            value={expenseDate}
+            onChange={(e) => setExpenseDate(e.target.value)}
+          />
+        </div>
+
+        <button
+          className="btn btn-primary submit-btn"
+          onClick={debouncedHandleTransaction}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? 'Adding...' : 'Add Transaction'}
+        </button>
+      </form>
     </div>
   );
 };

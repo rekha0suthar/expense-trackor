@@ -1,3 +1,5 @@
+import { getBalance, getExpenses } from '../apis';
+
 export const formatCurrency = (currency, exchangeRate, amount, show = true) => {
   if (show) {
     return `${currency} ${(amount * exchangeRate).toFixed(0)}`;
@@ -8,10 +10,7 @@ export const formatCurrency = (currency, exchangeRate, amount, show = true) => {
 
 export const fetchBalance = async (setSelectedCurrency, setIncome) => {
   try {
-    const response = await fetch(
-      'https://expense-trackor-backend.vercel.app/api/balance'
-    );
-    const data = await response.json();
+    const data = await getBalance();
     data.forEach((item) => {
       setSelectedCurrency(item.currency);
       setIncome(item.balanceAmount);
@@ -24,10 +23,7 @@ export const fetchBalance = async (setSelectedCurrency, setIncome) => {
 export const fetchExpense = async (setLoading, setExpense) => {
   try {
     setLoading(true);
-    const response = await fetch(
-      'https://expense-trackor-backend.vercel.app/api/expenses'
-    );
-    const data = await response.json();
+    const data = await getExpenses();
     const totalExpenses = data.reduce((acc, curr) => acc + curr.total, 0);
 
     setExpense(totalExpenses);
@@ -36,15 +32,4 @@ export const fetchExpense = async (setLoading, setExpense) => {
   } finally {
     setLoading(false);
   }
-};
-
-export const addExpense = async (newExpense) => {
-  // Post the new expense to the server
-  await fetch('https://expense-trackor-backend.vercel.app/api/expenses', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(newExpense),
-  });
 };
