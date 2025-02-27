@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import Expense, { aggregate, findOneAndDelete } from '../models/Expense.js';
 import {
   addExpense,
   deleteExpense,

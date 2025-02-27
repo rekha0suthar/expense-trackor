@@ -1,6 +1,8 @@
-const getExpenses = async (req, res) => {
+import Expense from '../models/Expense.js';
+
+export const getExpenses = async (req, res) => {
   try {
-    const expenses = await aggregate([
+    const expenses = await Expense.aggregate([
       {
         $sort: { expenseDate: -1 }, // Sort all expenses by date descending first
       },
@@ -55,7 +57,7 @@ const getExpenses = async (req, res) => {
   }
 };
 
-const addExpense = async (req, res) => {
+export const addExpense = async (req, res) => {
   const expense = new Expense({
     purpose: req.body.purpose,
     amount: req.body.amount,
@@ -69,9 +71,9 @@ const addExpense = async (req, res) => {
   }
 };
 
-const deleteExpense = async (req, res) => {
+export const deleteExpense = async (req, res) => {
   try {
-    const expense = await findOneAndDelete({
+    const expense = await Expense.findOneAndDelete({
       expenseDate: new Date(req.params.expenseDate),
     });
     if (!expense) {
@@ -82,5 +84,3 @@ const deleteExpense = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
-export { getExpenses, addExpense, deleteExpense };

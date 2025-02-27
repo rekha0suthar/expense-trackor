@@ -1,9 +1,18 @@
 import mongoose from 'mongoose';
 
 const expenseSchema = new mongoose.Schema({
-  purpose: { type: String, required: true },
-  amount: { type: Number, required: true },
-  expenseDate: { type: Date, required: true },
+  purpose: {
+    type: String,
+    required: true,
+  },
+  amount: {
+    type: Number,
+    required: true,
+  },
+  expenseDate: {
+    type: Date,
+    required: true,
+  },
 });
 
 // Mapping id to json responses
