@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const expenseSchema = new mongoose.Schema({
   purpose: { type: String, required: true },
@@ -13,4 +13,6 @@ expenseSchema.method('toJSON', function () {
   return object;
 });
 
-module.exports = mongoose.model('Expense', expenseSchema);
+const Expense = mongoose.model('Expense', expenseSchema);
+
+export default Expense;

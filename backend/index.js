@@ -1,10 +1,11 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
-const dotenv = require('dotenv');
-const expenseRouter = require('./routes/expenseRoute');
-const categoryRouter = require('./routes/categoryRoute');
-const balanceRouter = require('./routes/balanceRoute');
+import express from 'express';
+import mongoose from 'mongoose';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import expenseRouter from './routes/expenseRoute.js';
+import categoryRouter from './routes/categoryRoute.js';
+import balanceRouter from './routes/balanceRoute.js';
+
 dotenv.config();
 const app = express();
 

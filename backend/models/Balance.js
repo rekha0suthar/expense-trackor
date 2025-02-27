@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const balanceSchema = new mongoose.Schema({
   currency: { type: String, required: true },
@@ -12,4 +12,6 @@ balanceSchema.method('toJSON', function () {
   return object;
 });
 
-module.exports = mongoose.model('Balance', balanceSchema);
+const Balance = mongoose.model('Balance', balanceSchema);
+
+export default Balance;

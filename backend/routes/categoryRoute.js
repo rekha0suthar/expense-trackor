@@ -1,37 +1,16 @@
-const express = require('express');
-const Category = require('../models/Category');
-const router = express.Router();
+import { Router } from 'express';
+import Category from '../models/Category.js';
+import {
+  addCategory,
+  getCategories,
+} from '../controllers/categoryController.js';
+
+const router = Router();
 
 // Get all categories
-router.get('/', async (req, res) => {
-  try {
-    const categories = await Category.find();
-    res.json(categories);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
+router.get('/', getCategories);
 
 // Add new category
-router.post('/', async (req, res) => {
-  const { title } = req.body;
+router.post('/', addCategory);
 
-  // Check if the category already exists
-  const existingCategory = await Category.findOne({ title });
-  if (existingCategory) {
-    return res.status(400).json({ message: 'Category already exists' });
-  }
-
-  const category = new Category({
-    title,
-  });
-
-  try {
-    const newCategory = await category.save();
-    res.status(201).json(newCategory);
-  } catch (error) {
-    res.status(400).json({ message: error.message });
-  }
-});
-
-module.exports = router;
+export default router;
