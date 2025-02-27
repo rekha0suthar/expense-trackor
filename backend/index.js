@@ -2,30 +2,29 @@ import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import expenseRouter from './routes/expenseRoute.js';
-import categoryRouter from './routes/categoryRoute.js';
-import balanceRouter from './routes/balanceRoute.js';
+import expenseRoutes from './routes/expenseRoute.js';
+import categoryRoutes from './routes/categoryRoute.js';
+import balanceRoutes from './routes/balanceRoute.js';
 
 dotenv.config();
-const app = express();
 
-// Middleware
+const app = express();
+const PORT = process.env.PORT || 5001;
+
 app.use(cors());
 app.use(express.json());
 
 // Routes
-app.use('/api/expenses', expenseRouter);
-app.use('/api/category', categoryRouter);
-app.use('/api/balance', balanceRouter);
+app.use('/api/expenses', expenseRoutes);
+app.use('/api/category', categoryRoutes);
+app.use('/api/balance', balanceRoutes);
 
 // MongoDB connection
 mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => console.log('MongoDB connected'))
+  .connect(process.env.MONGODB_URI)
+  .then(() => console.log('Connected to MongoDB'))
   .catch((err) => console.error('MongoDB connection error:', err));
 
-// Server
-const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`Server is running on port ${PORT}`);
 });
