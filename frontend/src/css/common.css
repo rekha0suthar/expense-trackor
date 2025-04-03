@@ -6,6 +6,7 @@
   --warning-color: #ffd600;
   --text-color: #263238;
   --text-light: #546e7a;
+  --text-white: #ffffff;
   --light-bg: #f5f7fa;
   --border-color: #eceff1;
   --shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
@@ -149,6 +150,7 @@ body {
 @media screen and (max-width: 768px) {
   .dashboard-grid {
     grid-template-columns: 1fr;
+    padding: 1rem;
   }
 
   .app-title {

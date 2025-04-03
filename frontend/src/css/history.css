@@ -6,6 +6,7 @@
   color: var(--primary-color);
   font-size: 1.5rem;
   margin-bottom: 1.5rem;
+  margin-top: 0rem;
   font-weight: 600;
 }
 
@@ -109,7 +110,7 @@
 
 .expense-amount {
   margin: 0.25rem 0 0;
-  color: var(--danger-color);
+  color: var(--text-light);
   font-weight: 600;
   font-size: 0.9rem;
 }
@@ -129,8 +130,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(213, 0, 0, 0.1);
-  color: var(--danger-color);
+  background: rgba(85, 84, 84, 0.1);
+  color: var(--text-light);
   transition: all 0.3s ease;
   opacity: 1;
 }
@@ -173,7 +174,6 @@
 
 @media screen and (max-width: 480px) {
   .month-header {
-    flex-direction: column;
     align-items: flex-start;
     gap: 0.5rem;
   }
