@@ -3,7 +3,6 @@ import { TransactionContext } from '../context/transactionContext';
 import { formatCurrency } from '../utils';
 import { useApiCache } from '../hooks/useApiCache';
 import '../css/history.css';
-import { debounce } from 'lodash';
 import { FaTimes, FaChevronDown, FaChevronRight } from 'react-icons/fa';
 
 const API_URL = 'https://expense-trackor-backend.vercel.app/api';
@@ -54,47 +53,27 @@ const History = ({ handleDeleteTransaction }) => {
     }
   }, [fetchData, setTransaction]);
 
-  // Debounce delete operation
+  // Replace deleteExpense with debouncedDeleteExpense
   const debouncedDeleteExpense = useCallback(
-    debounce(async (expenseDate) => {
+    (expenseDate) => {
       if (isDeleting) return;
+      setIsDeleting(true);
 
-      try {
-        setIsDeleting(true);
-        const response = await fetch(
-          `${process.env.REACT_APP_API_URL}/expenses/${expenseDate}`,
-          {
-            method: 'DELETE',
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error('Failed to delete expense');
-        }
-
-        // Invalidate the expenses cache
-        invalidateCache(`${process.env.REACT_APP_API_URL}/expenses`);
-        await fetchExpense();
-      } catch (error) {
-        console.error('Error deleting expense:', error);
-        alert('Failed to delete expense. Please try again.');
-      } finally {
-        setIsDeleting(false);
-      }
-    }, 500),
-    [fetchExpense, isDeleting, invalidateCache]
+      fetch(`${API_URL}/expenses/${expenseDate}`, { method: 'DELETE' })
+        .then((response) => {
+          if (!response.ok) throw new Error('Failed to delete expense');
+          invalidateCache(`${API_URL}/expenses`);
+          return fetchExpense();
+        })
+        .catch((error) => console.error('Error deleting expense:', error))
+        .finally(() => setIsDeleting(false));
+    },
+    [fetchExpense, invalidateCache, isDeleting]
   );
 
   // Fetch expenses only once on mount and set up polling
   useEffect(() => {
     fetchExpense();
-
-    // Poll for updates every minute
-    const pollInterval = setInterval(fetchExpense, 60000);
-
-    return () => {
-      clearInterval(pollInterval);
-    };
   }, [fetchExpense]);
 
   return (

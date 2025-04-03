@@ -85,7 +85,6 @@
 .expense-item {
   display: flex;
   justify-content: space-between;
-  align-items: center;
   padding: 1rem 1.5rem;
   border-top: 1px solid var(--border-color);
   transition: all 0.3s ease;
@@ -180,7 +179,6 @@
   }
 
   .expense-item {
-    flex-direction: column;
     gap: 0.75rem;
   }
 

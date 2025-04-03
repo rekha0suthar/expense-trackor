@@ -29,6 +29,25 @@ const Balance = () => {
   // Currency options
   const currencies = ['INR', 'USD', 'EUR', 'GBP'];
 
+  // Memoized exchange rate fetch
+  const fetchExchangeRate = useCallback(
+    async (currency) => {
+      if (currency === 'INR') {
+        setExchangeRate(1);
+        return;
+      }
+      try {
+        const data = await axios(
+          `https://api.exchangerate-api.com/v4/latest/INR`
+        );
+        setExchangeRate(data.rates[currency]);
+      } catch (error) {
+        console.error('Error fetching exchange rate:', error);
+      }
+    },
+    [setExchangeRate]
+  );
+
   // Memoized fetch functions
   const fetchInitialData = useCallback(async () => {
     try {
@@ -53,57 +72,46 @@ const Balance = () => {
     } catch (error) {
       console.error('Error fetching initial data:', error);
     }
-  }, [fetchData, setSelectedCurrency, setIncome, setExpense]);
+  }, [
+    fetchData,
+    setSelectedCurrency,
+    setIncome,
+    setExpense,
+    fetchExchangeRate,
+  ]);
 
   // Debounced balance update
   const debouncedUpdateBalance = useCallback(
-    debounce(async (balanceData) => {
-      try {
-        await fetchData(`${API_URL}/balance`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(balanceData),
-        });
-        // Invalidate balance cache after update
-        invalidateCache(`${API_URL}/balance`);
-      } catch (error) {
-        console.error('Error updating balance:', error);
-      }
-    }, 1000),
+    (balanceData) => {
+      fetchData(`${API_URL}/balance`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(balanceData),
+      })
+        .then(() => invalidateCache(`${API_URL}/balance`))
+        .catch((error) => console.error('Error updating balance:', error));
+    },
     [fetchData, invalidateCache]
   );
 
-  // Memoized exchange rate fetch
-  const fetchExchangeRate = useCallback(
-    async (currency) => {
-      if (currency === 'INR') {
-        setExchangeRate(1);
-        return;
-      }
-      try {
-        const data = await axios(
-          `https://api.exchangerate-api.com/v4/latest/INR`
-        );
-        setExchangeRate(data.rates[currency]);
-      } catch (error) {
-        console.error('Error fetching exchange rate:', error);
-      }
+  // Update addBalance to use debounce directly
+  const addBalance = useCallback(
+    (e) => {
+      e.preventDefault();
+      debounce(
+        (data) => debouncedUpdateBalance(data),
+        1000
+      )({
+        currency: selectedCurrency,
+        balanceAmount: newBalance,
+      });
     },
-    [setExchangeRate]
+    [selectedCurrency, newBalance, debouncedUpdateBalance]
   );
 
   useEffect(() => {
     fetchInitialData();
   }, [fetchInitialData]);
-
-  // Update addBalance to use debounced version
-  const addBalance = async (e) => {
-    e.preventDefault();
-    debouncedUpdateBalance({
-      currency: selectedCurrency,
-      balanceAmount: newBalance,
-    });
-  };
 
   // Handle currency change and update balance based on the new exchange rate
   const handleCurrencyChange = async (e) => {
