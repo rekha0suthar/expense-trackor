@@ -37,10 +37,11 @@ const Balance = () => {
         return;
       }
       try {
-        const data = await axios(
+        const response = await axios(
           `https://api.exchangerate-api.com/v4/latest/INR`
         );
-        setExchangeRate(data.rates[currency]);
+        const newRate = response.data.rates[currency];
+        setExchangeRate(newRate);
       } catch (error) {
         console.error('Error fetching exchange rate:', error);
       }
@@ -116,15 +117,26 @@ const Balance = () => {
   // Handle currency change and update balance based on the new exchange rate
   const handleCurrencyChange = async (e) => {
     const newCurrency = e.target.value;
-    const currentBalanceInINR = balance / exchangeRate; // Use balance instead of newBalance
 
+    // Fetch the new exchange rate
     await fetchExchangeRate(newCurrency);
+
+    // Convert current balance and expenses to the new currency
+    const currentBalanceInINR = balance / exchangeRate; // Convert current balance to INR
+    const currentExpenseInINR = expense / exchangeRate; // Convert current expenses to INR
+
+    // Update the selected currency
     setSelectedCurrency(newCurrency);
 
-    // Convert INR balance to new currency
-    const convertedBalance = currentBalanceInINR * exchangeRate;
+    // Calculate the new balance and expenses in the new currency
+    const convertedBalance = currentBalanceInINR * exchangeRate; // Convert to new currency
+    const convertedExpense = currentExpenseInINR * exchangeRate; // Convert to new currency
+
+    // Update state with converted values
     setNewBalance(convertedBalance);
     setIncome(convertedBalance);
+    setExpense(convertedExpense);
+    setBalance(convertedBalance - convertedExpense); // Update balance based on new values
   };
 
   // Update input handling to properly handle currency conversion
@@ -141,7 +153,7 @@ const Balance = () => {
   return (
     <div className="card balance-card">
       <div className="balance-header">
-        <h2>Total Balance</h2>
+        <h2>Total Budget</h2>
         <div className="currency-controls">
           <select
             className="currency-selector"
@@ -172,7 +184,7 @@ const Balance = () => {
 
       <div className="balance-stats">
         <div className="stat-card">
-          <span className="stat-label">Available Balance</span>
+          <span className="stat-label">Available Budget</span>
           <span className="stat-value positive">
             {formatCurrency(selectedCurrency, exchangeRate, balance)}
           </span>
